@@ -1,6 +1,8 @@
 package com.example.musicbynoodlescompose.ui.currentlyPlaying
 
+import android.view.RoundedCorner
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,50 +12,109 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.paint
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.Player
+import androidx.media3.session.MediaController
 import coil.compose.rememberImagePainter
 import com.example.musicbynoodlescompose.R
 import com.example.musicbynoodlescompose.player.PlayerAction
+import com.example.musicbynoodlescompose.player.PlayerState
+import com.example.musicbynoodlescompose.player.rememberMediaController
+import kotlinx.coroutines.delay
 
 @Composable
 fun CurrentlyPlayingScreen(
-    state: CurrentlyPlayingState,
-    resetSlider: () -> Unit,
+    state: PlayerState?,
     onAction: (PlayerAction) -> Unit
 ) {
+    val progress = remember { mutableLongStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+            progress.longValue = state?.currentPosition ?: 0
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Image(
+            painter = rememberImagePainter(
+                data = state?.currentMediaItem?.mediaMetadata?.artworkUri,
+            ),
+            contentDescription = "",
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(10.dp)
+                .alpha(0.3f),
+            contentScale = ContentScale.FillHeight
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background,
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.background,
+                        )
+                    )
+                )
+        ) {}
+    }
     Box(
         contentAlignment = Alignment.BottomCenter,
         modifier = Modifier
-            .padding(bottom = 20.dp)
+            .fillMaxSize()
+            .padding(bottom = 80.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(50.dp, 0.dp, 50.dp, 130.dp)
+                .padding(50.dp, 0.dp, 50.dp, 0.dp)
         ) {
             CurrentlyPlayingSongInfo(
                 state = state
             )
             SongProgressSlider(
                 state = state,
+                progress = progress.longValue.toFloat(),
                 onAction = onAction
             )
             SongControls(
                 state = state,
-                resetSlider = resetSlider,
-                onAction = onAction
+                onAction = onAction,
+                resetSlider = {
+                    progress.longValue = 0
+                }
             )
         }
     }
@@ -61,18 +122,21 @@ fun CurrentlyPlayingScreen(
 
 @Composable
 fun CurrentlyPlayingSongInfo(
-    state: CurrentlyPlayingState
+    state: PlayerState?
 ) {
     Image(
         painter = rememberImagePainter(
-            data = state.song.imageUri,
+            data = state?.currentMediaItem?.mediaMetadata?.artworkUri,
             builder = {
                 placeholder(R.drawable.artwork_placeholder)
                 error(R.drawable.artwork_placeholder)
             }
         ),
         contentDescription = "Album artwork",
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(5.dp))
+            .shadow(50.dp),
         contentScale = ContentScale.Crop
     )
 
@@ -84,12 +148,12 @@ fun CurrentlyPlayingSongInfo(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = state.song.title,
+            text = state?.currentMediaItem?.mediaMetadata?.title.toString(),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onPrimary
         )
         Text(
-            text = state.song.artist,
+            text = state?.currentMediaItem?.mediaMetadata?.artist.toString(),
             color = MaterialTheme.colorScheme.onPrimary
         )
     }
@@ -97,35 +161,38 @@ fun CurrentlyPlayingSongInfo(
 
 @Composable
 fun SongProgressSlider(
-    state: CurrentlyPlayingState,
+    state: PlayerState?,
+    progress: Float,
     onAction: (PlayerAction) -> Unit
 ) {
+    val mediaController by rememberMediaController()
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(0.dp, 20.dp, 0.dp, 0.dp)
     ) {
-        Slider(
-            value = state.sliderPosition.toFloat(),
-            onValueChange = { selectedPosition ->
-                onAction(PlayerAction.Seek(selectedPosition.toLong()))
-            },
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colorScheme.onPrimary
-            ),
-            valueRange = 0f..state.song.duration.toFloat()
-        )
+//        Slider(
+//            value = 0F,
+//            onValueChange = { selectedPosition ->
+//                onAction(PlayerAction.Seek(selectedPosition.toLong()))
+//            },
+//            colors = SliderDefaults.colors(
+//                thumbColor = MaterialTheme.colorScheme.onPrimary,
+//                activeTrackColor = MaterialTheme.colorScheme.onPrimary
+//            ),
+//            valueRange = 0f..(state?.duration ?: 0).toFloat()
+//        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = timeLabel(state.progress),
+                text = timeLabel(progress.toLong()),
                 color = MaterialTheme.colorScheme.onPrimary
             )
             Text(
-                text = timeLabel(state.song.duration.toLong()),
+                text = timeLabel(mediaController?.duration ?: 999),
                 color = MaterialTheme.colorScheme.onPrimary
             )
         }
@@ -134,7 +201,7 @@ fun SongProgressSlider(
 
 @Composable
 fun SongControls(
-    state: CurrentlyPlayingState,
+    state: PlayerState?,
     resetSlider: () -> Unit,
     onAction: (PlayerAction) -> Unit
 ) {
@@ -154,7 +221,7 @@ fun SongControls(
             )
         )
         Image(
-            painter = if (state.isPlaying) {
+            painter = if (state?.isPlaying == true) {
                 painterResource(id = R.drawable.controls_pause)
             } else {
                 painterResource(id = R.drawable.controls_play)
@@ -164,7 +231,6 @@ fun SongControls(
             colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary),
             modifier = Modifier.clickable (
                 onClick = {
-                    resetSlider()
                     onAction(PlayerAction.PlayPause)
                 }
             )
