@@ -6,9 +6,9 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class Album(
-    val title: String,
-    val artist: String,
-    val artistId: Long,
-    val songs: MutableList<Song>,
-    val albumUri: Uri,
+    val title: String = "",
+    val artist: String = "",
+    val artistId: Long = 0L,
+    val songs: MutableList<Song> = mutableListOf(),
+    val albumUri: Uri = Uri.EMPTY,
 ): Parcelable

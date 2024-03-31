@@ -29,11 +29,17 @@ import coil.compose.rememberImagePainter
 import com.example.musicbynoodlescompose.R
 import com.example.musicbynoodlescompose.data.Album
 import com.example.musicbynoodlescompose.data.Artist
+import com.example.musicbynoodlescompose.data.Song
+import com.example.musicbynoodlescompose.ui.albums.albumsLibraryMenuItems
+import com.example.musicbynoodlescompose.ui.misc.ListMenu
+import com.example.musicbynoodlescompose.ui.misc.ListMenuItem
 
 @Composable
 fun CurrentArtist(
     artist: Artist,
-    onAlbumSelected: (album: Album) -> Unit
+    onAlbumSelected: (album: Album) -> Unit,
+    addToQueue: (songs: List<Song>) -> Unit,
+    addToPlaylist: (songs: List<Song>) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -62,14 +68,16 @@ fun CurrentArtist(
             ) {
                 Text(
                     text = artist.name,
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimary,
                 )
                 Text(
                     text =
                     if (artist.albums.size > 1) { "${artist.albums.size} albums" } else { "1 album" }
                             + " · "
                             + if (artist.songCount > 1) { "${artist.songCount} songs" } else { "1 song" },
-                    style = MaterialTheme.typography.titleSmall
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onPrimary,
                 )
             }
         }
@@ -114,15 +122,15 @@ fun CurrentArtist(
                         Text(
                             text = album.title,
                             style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-//                    Image(
-//                        painter = painterResource(id = androidx.appcompat.R.drawable.abc_ic_menu_overflow_material),
-//                        contentDescription = null
-//                    )
-
+                    ListMenu(menuItems = currentArtistMenuItems(
+                        addToPlaylist = { addToPlaylist(album.songs) },
+                        addToQueue = { addToQueue(album.songs) }
+                    ))
                 }
                 if (index != artist.albums.size - 1) {
                     Divider(
@@ -133,4 +141,20 @@ fun CurrentArtist(
             }
         }
     }
+}
+
+fun currentArtistMenuItems(
+    addToPlaylist: () -> Unit,
+    addToQueue: () -> Unit,
+): List<ListMenuItem> {
+    return listOf(
+        ListMenuItem(
+            text = "Add to queue",
+            onClick = { addToQueue() }
+        ),
+        ListMenuItem(
+            text = "Add to playlist",
+            onClick = { addToPlaylist() }
+        )
+    )
 }

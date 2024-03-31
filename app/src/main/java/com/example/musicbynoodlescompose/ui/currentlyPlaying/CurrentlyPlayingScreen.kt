@@ -1,6 +1,5 @@
 package com.example.musicbynoodlescompose.ui.currentlyPlaying
 
-import android.view.RoundedCorner
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -22,14 +20,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.paint
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -37,8 +33,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.Player
-import androidx.media3.session.MediaController
 import coil.compose.rememberImagePainter
 import com.example.musicbynoodlescompose.R
 import com.example.musicbynoodlescompose.player.PlayerAction
@@ -49,17 +43,10 @@ import kotlinx.coroutines.delay
 @Composable
 fun CurrentlyPlayingScreen(
     state: PlayerState?,
-    onAction: (PlayerAction) -> Unit
+    sliderState: SliderState,
+    onAction: (PlayerAction) -> Unit,
+    setSlider: (position: Long) -> Unit
 ) {
-    val progress = remember { mutableLongStateOf(0) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(1000)
-            progress.longValue = state?.currentPosition ?: 0
-        }
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -81,9 +68,9 @@ fun CurrentlyPlayingScreen(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.background,
+                            MaterialTheme.colorScheme.onBackground,
                             Color.Transparent,
-                            MaterialTheme.colorScheme.background,
+                            MaterialTheme.colorScheme.onBackground,
                         )
                     )
                 )
@@ -105,16 +92,14 @@ fun CurrentlyPlayingScreen(
                 state = state
             )
             SongProgressSlider(
-                state = state,
-                progress = progress.longValue.toFloat(),
+                sliderState = sliderState,
+                setSlider = setSlider,
                 onAction = onAction
             )
             SongControls(
                 state = state,
                 onAction = onAction,
-                resetSlider = {
-                    progress.longValue = 0
-                }
+                resetSlider = { setSlider(0) }
             )
         }
     }
@@ -161,38 +146,38 @@ fun CurrentlyPlayingSongInfo(
 
 @Composable
 fun SongProgressSlider(
-    state: PlayerState?,
-    progress: Float,
+    sliderState: SliderState,
+    setSlider: (position: Long) -> Unit,
     onAction: (PlayerAction) -> Unit
 ) {
-    val mediaController by rememberMediaController()
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(0.dp, 20.dp, 0.dp, 0.dp)
     ) {
-//        Slider(
-//            value = 0F,
-//            onValueChange = { selectedPosition ->
-//                onAction(PlayerAction.Seek(selectedPosition.toLong()))
-//            },
-//            colors = SliderDefaults.colors(
-//                thumbColor = MaterialTheme.colorScheme.onPrimary,
-//                activeTrackColor = MaterialTheme.colorScheme.onPrimary
-//            ),
-//            valueRange = 0f..(state?.duration ?: 0).toFloat()
-//        )
+        Slider(
+            value = sliderState.progress.toFloat(),
+            onValueChange = { selectedPosition ->
+                setSlider(selectedPosition.toLong())
+                onAction(PlayerAction.Seek(selectedPosition.toLong()))
+            },
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.onPrimary,
+                activeTrackColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            valueRange = 0f..sliderState.duration.toFloat()
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = timeLabel(progress.toLong()),
+                text = timeLabel(sliderState.progress.toLong()),
                 color = MaterialTheme.colorScheme.onPrimary
             )
             Text(
-                text = timeLabel(mediaController?.duration ?: 999),
+                text = timeLabel(sliderState.duration),
                 color = MaterialTheme.colorScheme.onPrimary
             )
         }

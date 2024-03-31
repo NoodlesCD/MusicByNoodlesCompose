@@ -1,14 +1,17 @@
 package com.example.musicbynoodlescompose.player
 
+import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.session.MediaController
 import com.example.musicbynoodlescompose.data.Song
 
@@ -35,34 +38,76 @@ fun rememberMediaController(
 }
 
 fun MediaController.setPlaylistWithIndex(playlist: List<Song>, index: Int) {
+    this.stop()
     this.clearMediaItems()
-    for (i in index..<(playlist.size - 1).coerceIn(0, 500)) {
-        this.addMediaItem(MediaItem.fromUri(playlist[i].uri))
+
+    val playlistType = Bundle()
+    playlistType.putString("playlistType", "main_playlist")
+
+    for (i in index..<playlist.size) {
+        val currentSong = playlist[i]
+        val mediaMetadata = MediaMetadata.Builder()
+            .setArtworkUri(currentSong.imageUri.toUri())
+            .setArtist(currentSong.artist)
+            .setAlbumTitle(currentSong.album)
+            .setTitle(currentSong.title)
+            .setExtras(playlistType)
+            .build()
+
+        val mediaItem = MediaItem.Builder()
+            .setMediaMetadata(mediaMetadata)
+            .setUri(currentSong.uri)
+            .setTag("main_queue")
+            .build()
+
+        this.addMediaItem(mediaItem)
+        if (i >= index + 100) break
     }
     this.prepare()
     this.play()
 }
 
-fun MediaController.playerAction(playerAction: PlayerAction) {
-    when (playerAction) {
-        is PlayerAction.PlayPause -> {
-            if (this.isPlaying) {
-                this.pause()
-            } else {
-                this.play()
-            }
-        }
+fun MediaController.addToQueue(queue: List<Song>) {
+    var queuePosition = 1
 
-        is PlayerAction.Seek -> {
-            this.seekTo(playerAction.position)
-        }
+    while (this.getMediaItemAt(queuePosition)
+            .mediaMetadata
+            .extras
+            ?.getString("playlistType") != "main_playlist") {
+        queuePosition++
+    }
 
-        is PlayerAction.Next -> {
-            this.seekToNext()
-        }
+    val playlistType = Bundle()
+    playlistType.putString("playlistType", "queue")
 
-        is PlayerAction.Previous -> {
-            this.seekToPrevious()
+    for (song in queue) {
+        val mediaMetadata = MediaMetadata.Builder()
+            .setArtworkUri(song.imageUri.toUri())
+            .setArtist(song.artist)
+            .setAlbumTitle(song.album)
+            .setTitle(song.title)
+            .setExtras(playlistType)
+            .build()
+
+        val mediaItem = MediaItem.Builder()
+            .setMediaMetadata(mediaMetadata)
+            .setUri(song.uri)
+            .build()
+
+        this.addMediaItem(queuePosition, mediaItem)
+        queuePosition++
+    }
+}
+
+fun MediaController.playerAction(playerAction: PlayerAction) = when (playerAction) {
+    is PlayerAction.Next -> this.seekToNext()
+    is PlayerAction.Previous -> this.seekToPrevious()
+    is PlayerAction.Seek -> this.seekTo(playerAction.position)
+    is PlayerAction.PlayPause -> {
+        if (this.isPlaying) {
+            this.pause()
+        } else {
+            this.play()
         }
     }
 }

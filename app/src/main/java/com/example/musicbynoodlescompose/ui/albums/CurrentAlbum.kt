@@ -1,9 +1,11 @@
 package com.example.musicbynoodlescompose.ui.albums
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,7 +17,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,76 +32,50 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import com.example.musicbynoodlescompose.R
 import com.example.musicbynoodlescompose.data.Album
 import com.example.musicbynoodlescompose.data.Song
+import com.example.musicbynoodlescompose.ui.misc.ListMenu
+import com.example.musicbynoodlescompose.ui.misc.ListMenuItem
 
 @Composable
 fun CurrentAlbum(
     album: Album,
-    onSongSelected: (index: Int) -> Unit
+    onSongSelected: (index: Int) -> Unit,
+    addToQueue: (song: Song) -> Unit,
+    addSongToPlaylist: (song: Song) -> Unit,
+    onArtistSelected: (artistId: Long) -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(15.dp, 20.dp, 15.dp, 0.dp)
     ) {
-        CurrentAlbumHeader(
-            album = album
+        MusicListHeader(
+            imageUri = album.albumUri,
+            title = album.title,
+            description = album.artist
         )
         CurrentAlbumList(
             album = album,
-            onSongSelected = onSongSelected
+            onSongSelected = onSongSelected,
+            addToQueue = addToQueue,
+            addSongToPlaylist = addSongToPlaylist,
+            onArtistSelected = onArtistSelected
         )
-    }
-}
-
-@Composable
-fun CurrentAlbumHeader(
-    album: Album
-) {
-    Row(
-        modifier = Modifier
-            .padding(15.dp, 15.dp, 15.dp, 15.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = rememberImagePainter(
-                data = album.albumUri,
-                builder = {
-                    placeholder(R.drawable.artwork_placeholder)
-                    error(R.drawable.artwork_placeholder)
-                }
-            ),
-            contentDescription = "Album artwork",
-            modifier = Modifier
-                .size(70.dp)
-                .clip(RoundedCornerShape(4.dp))
-        )
-        Column(
-            modifier = Modifier.padding(20.dp, 0.dp, 0.dp, 0.dp)
-        ) {
-            Text(
-                text = album.title,
-                style = MaterialTheme.typography.titleLarge
-            )
-            Text(
-                text = album.artist,
-                style = MaterialTheme.typography.titleSmall
-            )
-        }
     }
 }
 
 @Composable
 fun CurrentAlbumList(
     album: Album,
-    onSongSelected: (index: Int) -> Unit
+    onSongSelected: (index: Int) -> Unit,
+    addToQueue: (song: Song) -> Unit,
+    addSongToPlaylist: (song: Song) -> Unit,
+    onArtistSelected: (artistId: Long) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -109,17 +89,17 @@ fun CurrentAlbumList(
                 modifier = Modifier
                     .height(55.dp)
                     .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
                     .clickable(
                         onClick = {
                             onSongSelected(index)
                         }
                     )
             ) {
-                var isMenuExpanded by remember { mutableStateOf(false) }
-
                 Text(
                     text = (index + 1).toString(),
-                    Modifier.width(40.dp)
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.width(30.dp)
                 )
                 Column(
                     verticalArrangement = Arrangement.Center,
@@ -130,38 +110,90 @@ fun CurrentAlbumList(
                     Text(
                         text = song.title,
                         style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-//                    Image(
-//                        painter = painterResource(id = androidx.appcompat.R.drawable.abc_ic_menu_overflow_material),
-//                        contentDescription = null
-//                    )
-//                    DropdownMenu(
-//                        expanded = isMenuExpanded,
-//                        onDismissRequest = { isMenuExpanded = false }
-//                    ) {
-//                        DropdownMenuItem(
-//                            text = { "Add to queue" },
-//                            onClick = { /*TODO*/ }
-//                        )
-//                        DropdownMenuItem(
-//                            text = { "Add to playlist" },
-//                            onClick = { /*TODO*/ }
-//                        )
-//                        DropdownMenuItem(
-//                            text = { "View artist" },
-//                            onClick = { /*TODO*/ }
-//                        )
-//                    }
+                ListMenu(
+                    menuItems = currentAlbumMenuItems(
+                        addToQueue = { addToQueue(song) },
+                        addSongToPlaylist = { addSongToPlaylist(song) },
+                        onArtistSelected = { onArtistSelected(song.artistId) }
+                    )
+                )
             }
             if (index != album.songs.size - 1) {
                 Divider(
                     Modifier
-                        .padding(40.dp, 0.dp, 0.dp, 0.dp)
+                        .padding(50.dp, 0.dp, 15.dp, 0.dp)
                 )
             }
+        }
+    }
+}
+
+fun currentAlbumMenuItems(
+    addToQueue: () -> Unit,
+    addSongToPlaylist: () -> Unit,
+    onArtistSelected: () -> Unit
+): List<ListMenuItem> {
+    return listOf(
+        ListMenuItem(
+            text = "Add to queue",
+            onClick = { addToQueue() }
+        ),
+        ListMenuItem(
+            text = "Add to playlist",
+            onClick = { addSongToPlaylist() }
+        ),
+        ListMenuItem(
+            text = "View artist",
+            onClick = { onArtistSelected() }
+        )
+    )
+}
+
+
+
+
+@Composable
+fun MusicListHeader(
+    imageUri: Uri,
+    title: String,
+    description: String
+) {
+    Row(
+        modifier = Modifier
+            .padding(15.dp, 15.dp, 15.dp, 15.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painter = rememberImagePainter(
+                data = imageUri,
+                builder = {
+                    placeholder(R.drawable.artwork_placeholder)
+                    error(R.drawable.artwork_placeholder)
+                }
+            ),
+            contentDescription = "",
+            modifier = Modifier
+                .size(70.dp)
+                .clip(RoundedCornerShape(4.dp))
+        )
+        Column(
+            modifier = Modifier.padding(20.dp, 0.dp, 0.dp, 0.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
         }
     }
 }
