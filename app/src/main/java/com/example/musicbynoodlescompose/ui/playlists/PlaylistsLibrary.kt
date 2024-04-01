@@ -36,12 +36,15 @@ import com.example.musicbynoodlescompose.data.Artist
 import com.example.musicbynoodlescompose.data.Playlist
 import com.example.musicbynoodlescompose.ui.misc.ListMenu
 import com.example.musicbynoodlescompose.ui.misc.ListMenuItem
+import com.example.musicbynoodlescompose.ui.songs.LibraryListRow
+import com.example.musicbynoodlescompose.ui.songs.songLibraryMenuItems
 
 @Composable
 fun PlaylistsLibrary(
     playlistsLibrary: List<Playlist>,
     onPlaylistSelected: (playlist: Playlist) -> Unit,
     onDeletePlaylist: (playlist: Playlist) -> Unit,
+    onSleepTimerSelected: () -> Unit,
     listState: LazyListState,
 ){
     var searchValue by remember { mutableStateOf("") }
@@ -59,7 +62,8 @@ fun PlaylistsLibrary(
                 searchedList = playlistsLibrary.filter { playlist ->
                     playlist.title.lowercase().contains(searchValue.lowercase())
                 }
-            }
+            },
+            onSleepTimerSelected = onSleepTimerSelected
         )
         LazyColumn(
             state = listState,
@@ -70,68 +74,16 @@ fun PlaylistsLibrary(
                 .background(MaterialTheme.colorScheme.primary)
         ) {
             itemsIndexed(searchedList) { index, playlist ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .height(65.dp)
-                        .padding(15.dp, 0.dp, 15.dp, 0.dp)
-                        .fillMaxWidth()
-                        .clickable(
-                            onClick = {
-                                onPlaylistSelected(playlist)
-                            }
-                        )
-                ) {
-                    Image(
-                        painter = rememberImagePainter(
-                            data = playlist.songs[0].imageUri,
-                            builder = {
-                                placeholder(R.drawable.artwork_placeholder)
-                                error(R.drawable.artwork_placeholder)
-                            }
-                        ),
-                        contentDescription = "Album artwork",
-                        Modifier
-                            .size(45.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                LibraryListRow(
+                    rowImage = playlist.songs[0].imageUri,
+                    primaryText = playlist.title,
+                    secondaryText = if (playlist.songs.size > 1) "${playlist.songs.size} songs" else "1 song",
+                    isFinalRow = (index == searchedList.size - 1),
+                    onRowSelected = { onPlaylistSelected(playlist) },
+                    dropdownMenuItems = playlistLibraryMenuItems(
+                        onDeletePlaylist = { onDeletePlaylist(playlist) }
                     )
-                    Column(
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier
-                            .padding(15.dp, 0.dp, 0.dp, 0.dp)
-                            .weight(1f)
-                    ) {
-                        Text(
-                            text = playlist.title,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = if (playlist.songs.size > 1) "${playlist.songs.size} songs" else "1 song",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    ListMenu(
-                        listOf(
-                            ListMenuItem(
-                                text = "Delete playlist",
-                                onClick = { onDeletePlaylist(playlist) }
-                            )
-                        )
-                    )
-
-                }
-                if (index != playlistsLibrary.size - 1) {
-                    Divider(
-                        Modifier
-                            .padding(15.dp, 0.dp)
-                    )
-                }
+                )
             }
         }
     }

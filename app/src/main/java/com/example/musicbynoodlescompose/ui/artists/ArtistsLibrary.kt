@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,15 +36,33 @@ import com.example.musicbynoodlescompose.R
 import com.example.musicbynoodlescompose.TopBar
 import com.example.musicbynoodlescompose.data.Artist
 import com.example.musicbynoodlescompose.ui.misc.ListMenuItem
+import com.example.musicbynoodlescompose.ui.songs.LibraryListRow
+import com.example.musicbynoodlescompose.ui.songs.ListScroller
+import com.example.musicbynoodlescompose.ui.songs.songLibraryMenuItems
 
 @Composable
 fun ArtistsLibrary(
     artistsLibrary: List<Artist>,
     onArtistSelected: (artist: Artist) -> Unit,
+    onSleepTimerSelected: () -> Unit,
     listState: LazyListState,
 ){
     var searchValue by remember { mutableStateOf("") }
     var searchedList by remember { mutableStateOf(artistsLibrary) }
+
+    val scrollerCharacters = remember(searchedList) {
+        val characters = mutableMapOf<Char, Int>()
+        var foundFirstDigit = false
+        for (i in searchedList.indices) {
+            if (searchedList[i].name[0].isDigit() && foundFirstDigit) continue
+            if (characters[searchedList[i].name[0].uppercaseChar()] == null ) {
+                characters[searchedList[i].name[0].uppercaseChar()] = i
+            }
+            if (searchedList[i].name[0].isDigit()) foundFirstDigit = true
+        }
+        return@remember characters
+    }
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -57,76 +76,38 @@ fun ArtistsLibrary(
                 searchedList = artistsLibrary.filter { artist ->
                     artist.name.lowercase().contains(searchValue.lowercase())
                 }
-            }
+            },
+            onSleepTimerSelected = onSleepTimerSelected
         )
-        LazyColumn(
-            state = listState,
-        modifier = Modifier.fillMaxSize()
-            .padding(start = 15.dp, top = 10.dp, end = 15.dp)
-            .clip(RoundedCornerShape(15.dp))
-            .background(MaterialTheme.colorScheme.primary)
-    ) {
-            itemsIndexed(
-                searchedList
-//                if (searchValue.isNotBlank()) {
-//                    searchedList
-//                } else {
-//                    artistsLibrary
-//                }
-            ) { index, artist ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .height(65.dp)
-                        .padding(15.dp, 0.dp, 15.dp, 0.dp)
-                        .fillMaxWidth()
-                        .clickable(
-                            onClick = {
-                                onArtistSelected(artist)
-                            }
-                        )
-                ) {
-                    Image(
-                        painter = rememberImagePainter(
-                            data = artist.albums[0].albumUri,
-                            builder = {
-                                placeholder(R.drawable.artwork_placeholder)
-                                error(R.drawable.artwork_placeholder)
-                            }
-                        ),
-                        contentDescription = "Album artwork",
-                        Modifier.size(45.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                    )
-                    Column(
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier
-                            .padding(15.dp, 0.dp, 0.dp, 0.dp)
-                            .weight(1f)
-                    ) {
-                        Text(
-                            text = artist.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = if (artist.songCount > 1) "${artist.songCount} songs" else "1 song",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-                if (index != artistsLibrary.size - 1) {
-                    Divider(
-                        Modifier
-                            .padding(15.dp, 0.dp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 10.dp, end = 15.dp)
+        ) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 15.dp, end = 15.dp)
+                    .clip(RoundedCornerShape(15.dp))
+                    .background(MaterialTheme.colorScheme.primary)
+            ) {
+                itemsIndexed(searchedList) { index, artist ->
+                    LibraryListRow(
+                        rowImage = artist.albums[0].albumUri,
+                        primaryText = artist.name,
+                        secondaryText = if (artist.songCount > 1) "${artist.songCount} songs" else "1 song",
+                        isFinalRow = (index == searchedList.size - 1),
+                        onRowSelected = { onArtistSelected(artist) },
                     )
                 }
             }
+            ListScroller(
+                scrollerCharacters = scrollerCharacters,
+                coroutineScope = coroutineScope,
+                listState = listState
+            )
         }
     }
 }

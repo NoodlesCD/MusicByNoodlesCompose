@@ -10,5 +10,5 @@ data class Album(
     val artist: String = "",
     val artistId: Long = 0L,
     val songs: MutableList<Song> = mutableListOf(),
-    val albumUri: Uri = Uri.EMPTY,
+    val albumUri: String = "",
 ): Parcelable

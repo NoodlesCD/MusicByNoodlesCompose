@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +37,9 @@ import com.example.musicbynoodlescompose.data.Album
 import com.example.musicbynoodlescompose.data.Song
 import com.example.musicbynoodlescompose.ui.misc.ListMenu
 import com.example.musicbynoodlescompose.ui.misc.ListMenuItem
+import com.example.musicbynoodlescompose.ui.songs.LibraryListRow
+import com.example.musicbynoodlescompose.ui.songs.ListScroller
+import com.example.musicbynoodlescompose.ui.songs.songLibraryMenuItems
 
 @Composable
 fun AlbumsLibrary(
@@ -44,10 +48,24 @@ fun AlbumsLibrary(
     onArtistSelected: (artistId: Long) -> Unit,
     addToPlaylist: (songs: List<Song>) -> Unit,
     addToQueue: (songs: List<Song>) -> Unit,
+    onSleepTimerSelected: () -> Unit,
     listState: LazyListState,
 ) {
     var searchValue by remember { mutableStateOf("") }
     var searchedList by remember { mutableStateOf(albumsLibrary) }
+    var scrollerCharacters = remember(searchedList) {
+        val characters = mutableMapOf<Char, Int>()
+        var foundFirstDigit = false
+        for (i in searchedList.indices) {
+            if (searchedList[i].title[0].isDigit() && foundFirstDigit) continue
+            if (characters[searchedList[i].title[0].uppercaseChar()] == null ) {
+                characters[searchedList[i].title[0].uppercaseChar()] = i
+            }
+            if (searchedList[i].title[0].isDigit()) foundFirstDigit = true
+        }
+        return@remember characters
+    }
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -61,76 +79,43 @@ fun AlbumsLibrary(
                 searchedList = albumsLibrary.filter { album ->
                     album.title.lowercase().contains(searchValue.lowercase())
                 }
-            }
+            },
+            onSleepTimerSelected = onSleepTimerSelected
         )
-        LazyColumn(
-            state = listState,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 15.dp, top = 10.dp, end = 15.dp)
-                .clip(RoundedCornerShape(15.dp))
-                .background(MaterialTheme.colorScheme.primary)
+                .padding(top = 10.dp, end = 15.dp)
         ) {
-            itemsIndexed(searchedList) { index, album ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .height(65.dp)
-                        .padding(15.dp, 0.dp, 15.dp, 0.dp)
-                        .fillMaxWidth()
-                        .clickable(
-                            onClick = {
-                                onAlbumSelected(album)
-                            }
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 15.dp, end = 15.dp)
+                    .clip(RoundedCornerShape(15.dp))
+                    .background(MaterialTheme.colorScheme.primary)
+            ) {
+                itemsIndexed(searchedList) { index, album ->
+                    LibraryListRow(
+                        rowImage = album.albumUri,
+                        primaryText = album.title,
+                        secondaryText = album.artist,
+                        isFinalRow = (index == searchedList.size - 1),
+                        onRowSelected = { onAlbumSelected(album) },
+                        dropdownMenuItems = albumsLibraryMenuItems(
+                            onArtistSelected = { onArtistSelected(album.artistId) },
+                            addToPlaylist = { addToPlaylist(album.songs) },
+                            addToQueue = { addToQueue(album.songs) }
                         )
-                ) {
-                    Image(
-                        painter = rememberImagePainter(
-                            data = album.albumUri,
-                            builder = {
-                                placeholder(R.drawable.artwork_placeholder)
-                                error(R.drawable.artwork_placeholder)
-                            }
-                        ),
-                        contentDescription = "Album artwork",
-                        Modifier
-                            .size(45.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                    )
-                    Column(
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier
-                            .padding(15.dp, 0.dp, 0.dp, 0.dp)
-                            .weight(1f)
-                    ) {
-                        Text(
-                            text = album.title,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = album.artist,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    ListMenu(menuItems = albumsLibraryMenuItems(
-                        onArtistSelected = { onArtistSelected(album.artistId) },
-                        addToPlaylist = { addToPlaylist(album.songs) },
-                        addToQueue = { addToQueue(album.songs) }
-                    ))
-                }
-                if (index != albumsLibrary.size - 1) {
-                    Divider(
-                        Modifier
-                            .padding(15.dp, 0.dp)
                     )
                 }
             }
+            ListScroller(
+                scrollerCharacters = scrollerCharacters,
+                coroutineScope = coroutineScope,
+                listState = listState
+            )
         }
     }
 }

@@ -21,15 +21,17 @@ private val DarkColorScheme = darkColorScheme(
     onBackground = BackgroundDarkGreyGrad,
     primary = PrimaryDark,
     onPrimary = TextLight,
-    onSecondary = Color.White
+    onSecondary = SecondaryLight,
+    tertiary = ScrollerLight
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryLight,
     onBackground = BackgroundLightGreyGrad,
     onPrimary = TextDark,
-    onSecondary = Color.Black,
+    onSecondary = SecondaryDark,
     background = BackgroundLightGrey,
+    tertiary = ScrollerDark
 
 
     /* Other default colors to override

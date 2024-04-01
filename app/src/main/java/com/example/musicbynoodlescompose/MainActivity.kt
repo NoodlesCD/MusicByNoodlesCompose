@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.transition.TransitionSet
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
@@ -33,6 +34,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,16 +46,21 @@ import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.Album
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.List
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -61,8 +69,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
@@ -122,6 +132,7 @@ import com.example.musicbynoodlescompose.player.rememberMediaController
 import com.example.musicbynoodlescompose.player.setPlaylistWithIndex
 import com.example.musicbynoodlescompose.player.state
 import com.example.musicbynoodlescompose.ui.LibraryListStates
+import com.example.musicbynoodlescompose.ui.SongProgressIndicator
 import com.example.musicbynoodlescompose.ui.albums.AlbumsLibrary
 import com.example.musicbynoodlescompose.ui.albums.CurrentAlbum
 import com.example.musicbynoodlescompose.ui.albums.NavigationViewModel
@@ -141,6 +152,8 @@ import com.google.accompanist.permissions.rememberPermissionState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.DurationUnit
 
 val LazyListState.isScrolled: Boolean
     get() = firstVisibleItemIndex > 3 // || firstVisibleItemScrollOffset > 3
@@ -185,13 +198,13 @@ class MainActivity : ComponentActivity() {
                                 duration = currDur,
                                 linearProgress = currPos.toFloat() / currDur.toFloat()
                             )
-                            println(sliderState.state.linearProgress)
                         }
                     }
                 }
 
-                val sleepTimerSet by remember { mutableStateOf(false) }
-                val sleepTimer by remember { mutableStateOf(Duration.ZERO) }
+                var isSleepDialogOpen by remember { mutableStateOf(false) }
+                var sleepTimerSet by remember { mutableStateOf(false) }
+                var sleepTimer by remember { mutableStateOf(Duration.ZERO) }
                 LaunchedEffect(key1 = sleepTimerSet) {
                     delay(sleepTimer)
                     if (sleepTimerSet) {
@@ -259,7 +272,10 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onAddToPlaylistSelected = playlistsViewModel::updatePlaylist,
                                 onDeletePlaylist = playlistsViewModel::deletePlaylist,
-                                removeFromPlaylist = playlistsViewModel::removeFromPlaylist
+                                removeFromPlaylist = playlistsViewModel::removeFromPlaylist,
+                                onSleepTimerSelected = {
+                                    isSleepDialogOpen = true
+                                }
                             )
                             val playingBarVisible =
                                 (mediaController?.isPlaying == true || mediaController?.currentMediaItem != null) &&
@@ -278,6 +294,137 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+
+                when {
+                    isSleepDialogOpen -> {
+                        AlertDialog(
+                            title = { Text("Sleep timer") },
+                            text = {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Text(
+                                        text = "15 minutes",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier
+                                            .clickable(
+                                                onClick = {
+                                                    sleepTimerSet = true
+                                                    sleepTimer = 15.minutes
+                                                    isSleepDialogOpen = false
+                                                    Toast.makeText(applicationContext, "Timer set for 15 minutes", Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
+                                    )
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Text(
+                                        text = "30 minutes",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier
+                                            .clickable(
+                                                onClick = {
+                                                    sleepTimerSet = true
+                                                    sleepTimer = 30.minutes
+                                                    isSleepDialogOpen = false
+                                                    Toast.makeText(applicationContext, "Timer set for 30 minutes", Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
+                                    )
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Text(
+                                        text = "45 minutes",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier
+                                            .clickable(
+                                                onClick = {
+                                                    sleepTimerSet = true
+                                                    sleepTimer = 45.minutes
+                                                    isSleepDialogOpen = false
+                                                    Toast.makeText(applicationContext, "Timer set for 45 minutes", Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
+                                    )
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Text(
+                                        text = "1 hour",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier
+                                            .clickable(
+                                                onClick = {
+                                                    sleepTimerSet = true
+                                                    sleepTimer = 60.minutes
+                                                    isSleepDialogOpen = false
+                                                    Toast.makeText(applicationContext, "Timer set for 1 hour", Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
+                                    )
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Text(
+                                        text = "1.5 hours",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier
+                                            .clickable(
+                                                onClick = {
+                                                    sleepTimerSet = true
+                                                    sleepTimer = 90.minutes
+                                                    isSleepDialogOpen = false
+                                                    Toast.makeText(applicationContext, "Timer set for 1.5 hours", Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
+                                    )
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Text(
+                                        text = "2 hours",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier
+                                            .clickable(
+                                                onClick = {
+                                                    sleepTimerSet = true
+                                                    sleepTimer = 120.minutes
+                                                    isSleepDialogOpen = false
+                                                    Toast.makeText(applicationContext, "Timer set for 2 hours", Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
+                                    )
+                                    if (sleepTimerSet) {
+                                        Spacer(modifier = Modifier.height(15.dp))
+                                        Text(
+                                            text = "Cancel timer",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            modifier = Modifier
+                                                .clickable(
+                                                    onClick = {
+                                                        sleepTimerSet = false
+                                                        isSleepDialogOpen = false
+                                                        Toast.makeText(applicationContext, "Sleep timer cancelled", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                )
+                                        )
+                                    }
+                                }
+                            },
+                            onDismissRequest = {
+                                isSleepDialogOpen = false
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        isSleepDialogOpen = false
+                                    }
+                                ) {
+                                    Text(
+                                        text = "Dismiss",
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                }
+                            },
+                            containerColor = MaterialTheme.colorScheme.background
+                        )
+                    }
+                }
             }
         }
     }
@@ -290,7 +437,8 @@ fun TopBar(
     title: String,
     listState: LazyListState,
     searchValue: String,
-    onValueChange: (value: String) -> Unit
+    onValueChange: (value: String) -> Unit,
+    onSleepTimerSelected: () -> Unit
 ) {
     var searchExpanded by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
@@ -421,7 +569,11 @@ fun TopBar(
 //                )
                 }
                 Icon(
-                    imageVector = Icons.Outlined.Search,
+                    imageVector = if (searchExpanded) {
+                        Icons.Outlined.Close
+                    } else {
+                        Icons.Outlined.Search
+                    },
                     contentDescription = "Search",
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier
@@ -440,9 +592,13 @@ fun TopBar(
             )
             Spacer(modifier = Modifier.width(20.dp))
             Icon(
-                imageVector = Icons.Default.Timer,
+                imageVector = Icons.Outlined.Timer,
                 contentDescription = "Settings",
-                tint = MaterialTheme.colorScheme.onPrimary
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier
+                    .clickable(
+                        onClick = onSleepTimerSelected
+                    )
             )
         }
 
@@ -458,10 +614,13 @@ fun CurrentlyPlayingBar(
     playPauseAction: () -> Unit
 ) {
         Column(
+            verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .animateContentSize(animationSpec = tween(durationMillis = 500))
+                .fillMaxWidth()
                 .height(if (visible) 70.dp else 0.dp)
                 .padding(horizontal = 30.dp)
+                .padding(top = 10.dp)
                 .clickable(
                     onClick = {
                         navToCurrentlyPlayingScreen()
@@ -469,8 +628,7 @@ fun CurrentlyPlayingBar(
                 ),
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.padding(bottom = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
@@ -494,51 +652,63 @@ fun CurrentlyPlayingBar(
                 Column(
                     modifier = Modifier
                         .weight(2f)
-                        .padding(15.dp),
-                    horizontalAlignment = Alignment.Start
+                        .padding(start = 10.dp)
+                        .height(50.dp),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        text = playerState
-                            ?.currentMediaItem
-                            ?.mediaMetadata
-                            ?.title
-                            .toString(),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Text(
-                        text = playerState
-                            ?.currentMediaItem
-                            ?.mediaMetadata
-                            ?.artist
-                            .toString(),
-                        color = MaterialTheme.colorScheme.onPrimary
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) {
+                        Text(
+                            text = playerState
+                                ?.currentMediaItem
+                                ?.mediaMetadata
+                                ?.title
+                                .toString(),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Text(
+                            text = playerState
+                                ?.currentMediaItem
+                                ?.mediaMetadata
+                                ?.artist
+                                .toString(),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    SongProgressIndicator(
+                        progress = sliderState.linearProgress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(2.dp)
+                        //.alpha(if (visible) 1f else 0f)
                     )
                 }
+                Spacer(modifier = Modifier.width(10.dp))
                 Image(
-                    painter = if (playerState?.isPlaying == true) {
-                        painterResource(id = R.drawable.controls_pause)
+                    imageVector = if (playerState?.isPlaying == true) {
+                        Icons.Default.Pause
                     } else {
-                        painterResource(id = R.drawable.controls_play)
+                        Icons.Default.PlayArrow
                     },
                     contentDescription = "Play",
                     contentScale = ContentScale.Crop,
                     colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary),
-                    modifier = Modifier.clickable(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable(
                         onClick = {
                             playPauseAction()
                         }
                     )
                 )
             }
-            LinearProgressIndicator(
-                progress = sliderState.linearProgress,
-                trackColor = MaterialTheme.colorScheme.onPrimary,
-                color = MaterialTheme.colorScheme.onSecondary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .alpha(if (visible) 1f else 0f)
-            )
         }
 
 }
@@ -578,6 +748,7 @@ fun NavigationHost(
     addSongsToQueue: (songs: List<Song>) -> Unit,
     playerAction: (PlayerAction) -> Unit,
     setSlider: (position: Long) -> Unit,
+    onSleepTimerSelected: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val navigationViewModel = viewModel<NavigationViewModel>()
@@ -602,7 +773,8 @@ fun NavigationHost(
                         navController.navigate(Destination.CurrentPlaylist.route)
                     },
                     onDeletePlaylist = onDeletePlaylist,
-                    listState = listStates.playlistsState.value
+                    listState = listStates.playlistsState.value,
+                    onSleepTimerSelected = onSleepTimerSelected
                 )
             }
             composable(
@@ -653,7 +825,8 @@ fun NavigationHost(
                         navigationViewModel.currentArtist = selectedArtist
                         navController.navigate(Destination.CurrentArtist.route)
                     },
-                    listState = listStates.artistsState.value
+                    listState = listStates.artistsState.value,
+                    onSleepTimerSelected = onSleepTimerSelected
                 )
             }
             composable(
@@ -676,7 +849,8 @@ fun NavigationHost(
                         navController.navigate(Destination.AddToPlaylist.route)
                     },
                     addToQueue = addSongsToQueue,
-                    listState = listStates.albumsState.value
+                    listState = listStates.albumsState.value,
+                    onSleepTimerSelected = onSleepTimerSelected
                 )
             }
             composable(
@@ -703,7 +877,8 @@ fun NavigationHost(
                         navController.navigate(Destination.AddToPlaylist.route)
                     },
                     addToQueue = addSongToQueue,
-                    listState = listStates.songsState.value
+                    listState = listStates.songsState.value,
+                    onSleepTimerSelected = onSleepTimerSelected
                 )
             }
             composable(

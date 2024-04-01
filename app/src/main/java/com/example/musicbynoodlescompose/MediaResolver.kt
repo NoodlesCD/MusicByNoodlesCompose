@@ -56,10 +56,10 @@ class MediaResolver @Inject constructor(
                         ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)
 
                     val sArtworkUri: Uri = Uri.parse("content://media/external/audio/albumart")
-                    val imgUri: Uri = ContentUris.withAppendedId(
+                    val imgUri = ContentUris.withAppendedId(
                         sArtworkUri,
                         albumId
-                    )
+                    ).toString()
 
                     val newSong = Song(
                         id,
@@ -71,7 +71,7 @@ class MediaResolver @Inject constructor(
                         artistId,
                         duration,
                         trackUri.toString(),
-                        imgUri.toString()
+                        imgUri
                     )
 
                     // If the artist does not already exist in the list, create one.

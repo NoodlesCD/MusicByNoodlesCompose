@@ -19,8 +19,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -150,17 +153,21 @@ fun SongProgressSlider(
     setSlider: (position: Long) -> Unit,
     onAction: (PlayerAction) -> Unit
 ) {
-
+    var sliderProgress by remember(sliderState.sliderPosition) { mutableFloatStateOf(sliderState.sliderPosition.toFloat()) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(0.dp, 20.dp, 0.dp, 0.dp)
     ) {
         Slider(
-            value = sliderState.progress.toFloat(),
+            value = sliderProgress,
             onValueChange = { selectedPosition ->
-                setSlider(selectedPosition.toLong())
+                sliderProgress = selectedPosition
                 onAction(PlayerAction.Seek(selectedPosition.toLong()))
+                setSlider(selectedPosition.toLong())
+            },
+            onValueChangeFinished = {
+                sliderProgress = sliderState.sliderPosition.toFloat()
             },
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.onPrimary,
