@@ -56,9 +56,9 @@ internal class MediaControllerManager private constructor(context: Context) : Re
 
     companion object {
         @Volatile
-        private var instance: com.example.musicbynoodlescompose.player.MediaControllerManager? = null
+        private var instance: MediaControllerManager? = null
 
-        fun getInstance(context: Context): com.example.musicbynoodlescompose.player.MediaControllerManager {
+        fun getInstance(context: Context): MediaControllerManager {
             return instance ?: synchronized(this) {
                 instance ?: MediaControllerManager(context)
                     .also { instance = it }

@@ -1,4 +1,4 @@
-package com.example.musicbynoodlescompose
+package com.example.musicbynoodlescompose.data
 
 import android.content.ContentUris
 import android.content.Context
@@ -7,10 +7,10 @@ import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
-import com.example.musicbynoodlescompose.data.Album
-import com.example.musicbynoodlescompose.data.Artist
-import com.example.musicbynoodlescompose.data.MediaContent
-import com.example.musicbynoodlescompose.data.Song
+import com.example.musicbynoodlescompose.data.models.Album
+import com.example.musicbynoodlescompose.data.models.Artist
+import com.example.musicbynoodlescompose.data.models.MediaContent
+import com.example.musicbynoodlescompose.data.models.Song
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 

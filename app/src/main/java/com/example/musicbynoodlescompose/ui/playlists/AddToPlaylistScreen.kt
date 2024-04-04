@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
@@ -31,16 +30,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.paint
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import com.example.musicbynoodlescompose.R
-import com.example.musicbynoodlescompose.data.Artist
-import com.example.musicbynoodlescompose.data.Playlist
-import com.example.musicbynoodlescompose.data.Song
-import com.example.musicbynoodlescompose.ui.misc.ListMenu
-import com.example.musicbynoodlescompose.ui.misc.ListMenuItem
+import com.example.musicbynoodlescompose.data.models.Playlist
+import com.example.musicbynoodlescompose.data.models.Song
 
 @Composable
 fun AddToPlaylistScreen(
@@ -96,7 +91,7 @@ fun AddToPlaylistScreen(
             Modifier
                 .padding(15.dp, 0.dp)
         )
-        LazyColumn() {
+        LazyColumn {
             itemsIndexed(playlistsLibrary) { index, playlist ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

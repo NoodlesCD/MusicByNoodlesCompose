@@ -1,7 +1,9 @@
-package com.example.musicbynoodlescompose.data
+package com.example.musicbynoodlescompose.data.viewmodels
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.example.musicbynoodlescompose.data.PlaylistManager
+import com.example.musicbynoodlescompose.data.models.Playlist
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

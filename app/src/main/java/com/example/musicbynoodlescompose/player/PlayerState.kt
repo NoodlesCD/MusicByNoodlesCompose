@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import com.example.musicbynoodlescompose.data.Song
 
 fun Player.state(): PlayerState {
     return PlayerStateImpl(this)

@@ -41,6 +41,10 @@ import com.example.musicbynoodlescompose.R
 import com.example.musicbynoodlescompose.player.PlayerAction
 import com.example.musicbynoodlescompose.player.PlayerState
 import com.example.musicbynoodlescompose.player.rememberMediaController
+import com.example.musicbynoodlescompose.ui.currentlyPlaying.components.CurrentlyPlayingBackground
+import com.example.musicbynoodlescompose.ui.currentlyPlaying.components.CurrentlyPlayingSongInfo
+import com.example.musicbynoodlescompose.ui.currentlyPlaying.components.SongControls
+import com.example.musicbynoodlescompose.ui.currentlyPlaying.components.SongProgressSlider
 import kotlinx.coroutines.delay
 
 @Composable
@@ -50,35 +54,7 @@ fun CurrentlyPlayingScreen(
     onAction: (PlayerAction) -> Unit,
     setSlider: (position: Long) -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        Image(
-            painter = rememberImagePainter(
-                data = state?.currentMediaItem?.mediaMetadata?.artworkUri,
-            ),
-            contentDescription = "",
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(10.dp)
-                .alpha(0.3f),
-            contentScale = ContentScale.FillHeight
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.onBackground,
-                            Color.Transparent,
-                            MaterialTheme.colorScheme.onBackground,
-                        )
-                    )
-                )
-        ) {}
-    }
+    CurrentlyPlayingBackground(bgImage = state?.currentMediaItem?.mediaMetadata?.artworkUri)
     Box(
         contentAlignment = Alignment.BottomCenter,
         modifier = Modifier
@@ -106,151 +82,4 @@ fun CurrentlyPlayingScreen(
             )
         }
     }
-}
-
-@Composable
-fun CurrentlyPlayingSongInfo(
-    state: PlayerState?
-) {
-    Image(
-        painter = rememberImagePainter(
-            data = state?.currentMediaItem?.mediaMetadata?.artworkUri,
-            builder = {
-                placeholder(R.drawable.artwork_placeholder)
-                error(R.drawable.artwork_placeholder)
-            }
-        ),
-        contentDescription = "Album artwork",
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(5.dp))
-            .shadow(50.dp),
-        contentScale = ContentScale.Crop
-    )
-
-    Column(
-        Modifier
-            .height(90.dp)
-            .padding(0.dp, 40.dp, 0.dp, 0.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = state?.currentMediaItem?.mediaMetadata?.title.toString(),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
-        Text(
-            text = state?.currentMediaItem?.mediaMetadata?.artist.toString(),
-            color = MaterialTheme.colorScheme.onPrimary
-        )
-    }
-}
-
-@Composable
-fun SongProgressSlider(
-    sliderState: SliderState,
-    setSlider: (position: Long) -> Unit,
-    onAction: (PlayerAction) -> Unit
-) {
-    var sliderProgress by remember(sliderState.sliderPosition) { mutableFloatStateOf(sliderState.sliderPosition.toFloat()) }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(0.dp, 20.dp, 0.dp, 0.dp)
-    ) {
-        Slider(
-            value = sliderProgress,
-            onValueChange = { selectedPosition ->
-                sliderProgress = selectedPosition
-                onAction(PlayerAction.Seek(selectedPosition.toLong()))
-                setSlider(selectedPosition.toLong())
-            },
-            onValueChangeFinished = {
-                sliderProgress = sliderState.sliderPosition.toFloat()
-            },
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colorScheme.onPrimary,
-                activeTrackColor = MaterialTheme.colorScheme.onPrimary
-            ),
-            valueRange = 0f..sliderState.duration.toFloat()
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = timeLabel(sliderState.progress.toLong()),
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-            Text(
-                text = timeLabel(sliderState.duration),
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-        }
-    }
-}
-
-@Composable
-fun SongControls(
-    state: PlayerState?,
-    resetSlider: () -> Unit,
-    onAction: (PlayerAction) -> Unit
-) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(40.dp, 20.dp, 40.dp, 0.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.controls_previous),
-            contentDescription = "Previous",
-            contentScale = ContentScale.Crop,
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary),
-            modifier = Modifier.clickable (
-                onClick = { onAction(PlayerAction.Previous) }
-            )
-        )
-        Image(
-            painter = if (state?.isPlaying == true) {
-                painterResource(id = R.drawable.controls_pause)
-            } else {
-                painterResource(id = R.drawable.controls_play)
-            },
-            contentDescription = "Play",
-            contentScale = ContentScale.Crop,
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary),
-            modifier = Modifier.clickable (
-                onClick = {
-                    onAction(PlayerAction.PlayPause)
-                }
-            )
-        )
-        Image(
-            painter = painterResource(id = R.drawable.controls_next),
-            contentDescription = "Forward",
-            contentScale = ContentScale.Crop,
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary),
-            modifier = Modifier.clickable (
-                onClick = {
-                    resetSlider()
-                    onAction(PlayerAction.Next)
-                }
-            )
-        )
-    }
-}
-
-/** Generates a time label of mm:ss */
-private fun timeLabel(time: Long): String {
-    var label = ""
-    val min = time / 1000 / 60
-    val sec = time / 1000 % 60
-
-    label = "$min:"
-    if (sec < 10) label += "0"
-    label += sec
-
-    return label
 }

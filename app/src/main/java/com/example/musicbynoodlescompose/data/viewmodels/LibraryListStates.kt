@@ -1,4 +1,4 @@
-package com.example.musicbynoodlescompose.ui
+package com.example.musicbynoodlescompose.data.viewmodels
 
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState

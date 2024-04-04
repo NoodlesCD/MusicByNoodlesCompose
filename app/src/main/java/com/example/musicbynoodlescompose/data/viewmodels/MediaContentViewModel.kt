@@ -1,8 +1,8 @@
-package com.example.musicbynoodlescompose.data
+package com.example.musicbynoodlescompose.data.viewmodels
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.example.musicbynoodlescompose.MediaResolver
+import com.example.musicbynoodlescompose.data.MediaResolver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

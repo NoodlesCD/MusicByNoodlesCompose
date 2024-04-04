@@ -25,12 +25,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import com.example.musicbynoodlescompose.R
-import com.example.musicbynoodlescompose.data.Album
-import com.example.musicbynoodlescompose.data.Artist
-import com.example.musicbynoodlescompose.data.Playlist
-import com.example.musicbynoodlescompose.data.Song
-import com.example.musicbynoodlescompose.ui.misc.ListMenu
-import com.example.musicbynoodlescompose.ui.misc.ListMenuItem
+import com.example.musicbynoodlescompose.data.models.Playlist
+import com.example.musicbynoodlescompose.data.models.Song
+import com.example.musicbynoodlescompose.ui.misc.ListDropdownMenu
+import com.example.musicbynoodlescompose.ui.core.components.ListMenuItem
 
 @Composable
 fun CurrentPlaylist(
@@ -131,7 +129,8 @@ fun CurrentPlaylist(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-                    ListMenu(menuItems = playlistMenuItems(
+                    ListDropdownMenu(
+                        menuItems = playlistMenuItems(
                         onArtistSelected = { onArtistSelected(song.artistId) },
                         onAlbumSelected = { onAlbumSelected(song.albumId) },
                         addToQueue = { addToQueue(song) },

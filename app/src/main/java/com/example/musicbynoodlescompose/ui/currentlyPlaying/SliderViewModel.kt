@@ -1,4 +1,4 @@
-package com.example.musicbynoodlescompose.player
+package com.example.musicbynoodlescompose.ui.currentlyPlaying
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

@@ -1,15 +1,13 @@
-package com.example.musicbynoodlescompose.ui.albums
+package com.example.musicbynoodlescompose.data.viewmodels
 
-import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
-import com.example.musicbynoodlescompose.data.Album
-import com.example.musicbynoodlescompose.data.Artist
-import com.example.musicbynoodlescompose.data.Playlist
-import com.example.musicbynoodlescompose.data.Song
+import com.example.musicbynoodlescompose.data.models.Album
+import com.example.musicbynoodlescompose.data.models.Artist
+import com.example.musicbynoodlescompose.data.models.Playlist
+import com.example.musicbynoodlescompose.data.models.Song
 
 class NavigationViewModel: ViewModel() {
 

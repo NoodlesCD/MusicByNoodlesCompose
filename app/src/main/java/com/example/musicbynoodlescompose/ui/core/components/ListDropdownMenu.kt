@@ -1,4 +1,4 @@
-package com.example.musicbynoodlescompose.ui.misc
+package com.example.musicbynoodlescompose.ui.core.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -19,10 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 
 @Composable
-fun ListMenu(
+fun ListDropdownMenu(
     menuItems: List<ListMenuItem>
 ) {
-    Box() {
+    Box {
         var isMenuExpanded by remember { mutableStateOf(false) }
 
         Image(

@@ -13,7 +13,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.session.MediaController
-import com.example.musicbynoodlescompose.data.Song
+import com.example.musicbynoodlescompose.data.models.Song
 
 @Composable
 fun rememberMediaController(
